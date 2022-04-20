@@ -1,8 +1,14 @@
 use bevy::{prelude::*, render::camera::ScalingMode, window::WindowMode};
+use debug::DebugPlugin;
+use player::PlayerPlugin;
+
+mod player;
+mod debug;
 
 pub const CLEAR: Color = Color::rgb(0.1, 0.1, 0.1);
 pub const RESOLUTION: f32 = 16.0 / 9.0;
 
+// 5:46
 fn main() {
     App::new()
         .insert_resource(ClearColor(CLEAR))
@@ -10,46 +16,19 @@ fn main() {
             width: 1600.0,
             height: 900.0,
             title: "Bevy tutorial".to_string(),
-            resizable: false,
+            resizable: true,
             mode: WindowMode::Windowed,
             ..Default::default()
         })
         .add_startup_system(spawn_camera)
-        .add_startup_system(spawn_player)
         .add_startup_system_to_stage(StartupStage::PreStartup, load_ascii)
         .add_plugins(DefaultPlugins)
+        .add_plugin(PlayerPlugin)
+        .add_plugin(DebugPlugin)
         .run();
 }
 
-fn spawn_player(mut commands: Commands, ascii: Res<AsciiSheet>) {
-    let mut sprite = TextureAtlasSprite::new(1);
-    sprite.color = Color::rgb(0.3, 0.3, 0.9);
-    sprite.custom_size = Some(Vec2::splat(1.0));
 
-    let player = commands.spawn_bundle(SpriteSheetBundle {
-        sprite,
-        texture_atlas: ascii.0.clone(),
-        transform: Transform {
-            translation: Vec3::new(0.0, 0.0, 900.0),
-            ..Default::default()
-        },
-        ..Default::default()
-    }).insert(Name::new("Player")).id();
-
-    let mut background_sprite = TextureAtlasSprite::new(0);
-    background_sprite.color = Color::rgb(0.5, 0.5, 0.5);
-    background_sprite.custom_size = Some(Vec2::splat(1.0));
-    let background = commands.spawn_bundle(SpriteSheetBundle {
-        sprite: background_sprite,
-        texture_atlas: ascii.0.clone(),
-        transform: Transform {
-            translation: Vec3::new(0.0, 0.0, -1.0),
-            ..Default::default()
-        },
-        ..Default::default()
-    }).insert(Name::new("Background")).id();
-    commands.entity(player).add_child(background);
-}
 
 fn spawn_camera(mut commands: Commands) {
     let mut camera = OrthographicCameraBundle::new_2d();
